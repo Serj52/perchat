@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 
 from app.database import Base
 
-class Message(Base):
+class Messages(Base):
     __tablename__ = 'Messages'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
