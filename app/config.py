@@ -8,14 +8,14 @@ ENV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env"
 
 class DbSettings(BaseSettings):
     DB_HOST: str
-    DB_PORT: str
+    DB_PORT: int
     DB_NAME: str
     DB_USER: str
     DB_PASSWORD: str
-    DB_URL: str = None
+    DB_URL: str | None = None
 
     model_config = SettingsConfigDict(
-        env_file=ENV_PATH
+        env_file=ENV_PATH, extra='ignore'
     )
 
     def model_post_init(self, __context: Any) -> None:
@@ -27,16 +27,10 @@ class AuthSettings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str
     model_config = SettingsConfigDict(
-        env_file=ENV_PATH
+        env_file=ENV_PATH, extra='ignore'
     )
 
 
-auth_settings = AuthSettings()
-db_settings = DbSettings()
-
-
-def get_auth_settings():
-    return {"secret_key": auth_settings.SECRET_KEY, "algorithm": auth_settings.ALGORITHM}
-
-def get_db_settings():
-    return {"db_url": db_settings.DB_URL}
+AUTH_SETTINGS = AuthSettings().model_dump()
+DB_SETTINGS = DbSettings().model_dump()
+print()

@@ -5,16 +5,16 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import get_auth_settings
-from app.users.crud import get_user
+from app.config import AUTH_SETTINGS
+
+from app.users.crud import get_user_by_mail
 
 
 def create_access_token(data: dict) -> str:
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(days=366)
     to_encode.update({"exp": expire})
-    auth_data = get_auth_settings()
-    encode_jwt = jwt.encode(to_encode, auth_data['secret_key'], algorithm=auth_data['algorithm'])
+    encode_jwt = jwt.encode(to_encode, AUTH_SETTINGS['SECRET_KEY'], algorithm=AUTH_SETTINGS['ALGORITHM'])
     return encode_jwt
 
 
@@ -30,7 +30,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 async def authenticate_user(email: EmailStr, password: str, session: AsyncSession):
-    user = await get_user(email=email, session=session)
+    user = await get_user_by_mail(email=email, session=session)
     if not user or verify_password(plain_password=password, hashed_password=user.hashed_password) is False:
         return None
     return user
