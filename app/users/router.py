@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Response
 
 from app.dependencies import DataBaseDep
-from app.exceptions import UserAlreadyExistsException, IncorrectEmailOrPasswordException, PasswordMismatchException
+from app.exceptions import UserAlreadyExistsException, IncorrectEmailOrPasswordException, \
+    PasswordMismatchException
 from app.users.auth import get_password_hash, authenticate_user, create_access_token
 
 from app.users.crud import get_user_by_mail, create_user
@@ -32,12 +33,14 @@ async def register_user(user_data: UserRegister, session=DataBaseDep) -> dict:
 
 @router.post("/login")
 async def auth_user(response: Response, user_data: UserAuth, session=DataBaseDep):
-    check = await authenticate_user(email=user_data.email, password=user_data.password, session=session)
+    check = await authenticate_user(email=user_data.email, password=user_data.password,
+                                    session=session)
     if check is None:
         raise IncorrectEmailOrPasswordException
     access_token = create_access_token({"sub": str(check.id)})
     response.set_cookie(key="users_access_token", value=access_token, httponly=True)
-    return {'ok': True, 'access_token': access_token, 'refresh_token': None, 'message': 'Авторизация успешна!'}
+    return {'ok': True, 'access_token': access_token, 'refresh_token': None,
+            'message': 'Авторизация успешна!'}
 
 
 @router.post("/logout")

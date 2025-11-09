@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.exceptions import TokenExpiredException, TokenNoFoundException
 from app.users.router import router as users_router
+
 # from app.chat.router import router as chat_router
 
 app = FastAPI()
@@ -15,13 +16,16 @@ app.mount('/static', StaticFiles(directory='static'), name='static')
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Разрешить запросы с любых источников. Можете ограничить список доменов
+    allow_origins=["*"],
+    # Разрешить запросы с любых источников. Можете ограничить список доменов
     allow_credentials=True,
     allow_methods=["*"],  # Разрешить все методы (GET, POST, PUT, DELETE и т.д.)
     allow_headers=["*"],  # Разрешить все заголовки
 )
 
 app.include_router(users_router)
+
+
 # app.include_router(chat_router)
 
 
@@ -36,10 +40,12 @@ async def token_expired_exception_handler(request: Request, exc: HTTPException):
     # Возвращаем редирект на страницу /auth
     return RedirectResponse(url="/auth")
 
+
 async def main():
     config = uvicorn.Config(app, port=8080, host="0.0.0.0")
     server = uvicorn.Server(config)
     await server.serve()
+
 
 if __name__ == '__main__':
     asyncio.run(main())

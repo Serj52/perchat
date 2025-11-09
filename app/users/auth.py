@@ -31,6 +31,6 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 async def authenticate_user(email: EmailStr, password: str, session: AsyncSession):
     user = await get_user_by_mail(email=email, session=session)
-    if not user or verify_password(plain_password=password, hashed_password=user.hashed_password) is False:
+    if not user or verify_password(plain_password=password, hashed_password=user.password) is False:
         return None
     return user
