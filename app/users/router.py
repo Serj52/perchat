@@ -1,5 +1,9 @@
 from fastapi import APIRouter, Response
+from starlette.requests import Request
+from starlette.responses import HTMLResponse
+from starlette.templating import Jinja2Templates
 
+from app.config import PATH_SETTINGS
 from app.dependencies import DataBaseDep
 from app.exceptions import UserAlreadyExistsException, IncorrectEmailOrPasswordException, \
     PasswordMismatchException
@@ -9,6 +13,13 @@ from app.users.crud import get_user_by_mail, create_user
 from app.users.shemas import UserAuth, UserRegister
 
 router = APIRouter(prefix='/auth', tags=['Auth'])
+
+templates = Jinja2Templates(directory=PATH_SETTINGS["TEMPLATES"])
+
+
+@router.get("/", response_class=HTMLResponse, summary="Страница авторизации")
+async def get_categories(request: Request):
+    return templates.TemplateResponse("auth.html", {"request": request})
 
 
 @router.post("/register")

@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мини-чат | Вход и регистрация</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #f8f9fa;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 18px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            background: white;
+        }
+
+        .form-container {
+            padding: 30px;
+        }
+
+        .form {
+            display: none;
+        }
+
+        .form.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #eaeaea;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group input.error {
+            border-color: #ff4757;
+        }
+
+        .error-message {
+            color: #ff4757;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background: #5a67d8;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .success-message {
+            background: #2ed573;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .api-status {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        .api-status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .api-status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Мини-чат</h1>
+            <p>Общайтесь в реальном времени</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="login">Авторизация</div>
+            <div class="tab" data-tab="register">Регистрация</div>
+        </div>
+
+        <div class="form-container">
+            <div class="success-message" id="successMessage"></div>
+
+            <!-- Форма авторизации -->
+            <form id="loginForm" class="form active">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" placeholder="Введите ваш email" required>
+                    <div class="error-message" id="loginEmailError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Пароль</label>
+                    <input type="password" id="loginPassword" placeholder="Введите ваш пароль" required>
+                    <div class="error-message" id="loginPasswordError"></div>
+                </div>
+
+                <button type="submit" class="btn" id="loginBtn">
+                    <span id="loginText">Войти в чат</span>
+                    <div class="loading" id="loginLoading" style="display: none;"></div>
+                </button>
+            </form>
+
+            <!-- Форма регистрации -->
+            <form id="registerForm" class="form">
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" placeholder="Введите ваш email" required>
+                    <div class="error-message" id="registerEmailError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="registerName">Имя</label>
+                    <input type="text" id="registerName" placeholder="Введите ваше имя" required>
+                    <div class="error-message" id="registerNameError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="registerPassword">Пароль</label>
+                    <input type="password" id="registerPassword" placeholder="Придумайте пароль" required>
+                    <div class="error-message" id="registerPasswordError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="registerPasswordConfirm">Повторите пароль</label>
+                    <input type="password" id="registerPasswordConfirm" placeholder="Повторите пароль" required>
+                    <div class="error-message" id="registerPasswordConfirmError"></div>
+                </div>
+
+                <button type="submit" class="btn" id="registerBtn">
+                    <span id="registerText">Зарегистрироваться</span>
+                    <div class="loading" id="registerLoading" style="display: none;"></div>
+                </button>
+            </form>
+
+            <div class="api-status" id="apiStatus">
+                Проверка подключения к API...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Конфигурация
+        const API_BASE_URL = 'http://localhost:8080'; // Измените на ваш URL FastAPI
+
+        // Элементы DOM
+        const tabs = document.querySelectorAll('.tab');
+        const forms = document.querySelectorAll('.form');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const apiStatus = document.getElementById('apiStatus');
+        const successMessage = document.getElementById('successMessage');
+
+        // Переключение между табами
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.getAttribute('data-tab');
+
+                // Активируем выбранную вкладку
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // Показываем выбранную форму
+                forms.forEach(form => {
+                    form.classList.remove('active');
+                    if (form.id === `${tabName}Form`) {
+                        form.classList.add('active');
+                    }
+                });
+
+                // Очищаем сообщения
+                clearMessages();
+            });
+        });
+
+        // Проверка подключения к API
+        async function checkApiConnection() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                if (response.ok) {
+                    apiStatus.textContent = '✓ Подключение к API установлено';
+                    apiStatus.className = 'api-status connected';
+                } else {
+                    throw new Error('API не доступен');
+                }
+            } catch (error) {
+                apiStatus.textContent = '✗ Ошибка подключения к API. Убедитесь, что сервер запущен';
+                apiStatus.className = 'api-status disconnected';
+            }
+        }
+
+        // Очистка сообщений об ошибках
+        function clearMessages() {
+            // Очищаем ошибки
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.classList.remove('show');
+                el.textContent = '';
+            });
+
+            // Очищаем успешные сообщения
+            successMessage.classList.remove('show');
+            successMessage.textContent = '';
+
+            // Сбрасываем стили полей
+            document.querySelectorAll('input').forEach(input => {
+                input.classList.remove('error');
+            });
+        }
+
+        // Отображение ошибки
+        function showError(fieldId, message) {
+            const input = document.getElementById(fieldId);
+            const errorElement = document.getElementById(`${fieldId}Error`);
+
+            if (input && errorElement) {
+                input.classList.add('error');
+                errorElement.textContent = message;
+                errorElement.classList.add('show');
+            }
+        }
+
+        // Показ успешного сообщения
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.classList.add('show');
+        }
+
+        // Валидация email
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        // Валидация пароля
+        function validatePassword(password) {
+            return password.length >= 6;
+        }
+
+        // Обработка авторизации
+        async function handleLogin(event) {
+            event.preventDefault();
+
+            clearMessages();
+
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            // Валидация
+            let isValid = true;
+
+            if (!email) {
+                showError('loginEmail', 'Введите email');
+                isValid = false;
+            } else if (!validateEmail(email)) {
+                showError('loginEmail', 'Введите корректный email');
+                isValid = false;
+            }
+
+            if (!password) {
+                showError('loginPassword', 'Введите пароль');
+                isValid = false;
+            }
+
+            if (!isValid) return;
+
+            // Показываем индикатор загрузки
+            const loginBtn = document.getElementById('loginBtn');
+            const loginText = document.getElementById('loginText');
+            const loginLoading = document.getElementById('loginLoading');
+
+            loginBtn.disabled = true;
+            loginText.style.display = 'none';
+            loginLoading.style.display = 'inline-block';
+
+            try {
+                // Отправляем запрос на авторизацию
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Успешная авторизация
+                    showSuccess('Вход выполнен успешно! Перенаправляем в чат...');
+
+                    // Сохраняем токен (в реальном приложении используйте безопасное хранение)
+                    localStorage.setItem('auth_token', data.access_token);
+                    localStorage.setItem('user_email', email);
+
+                    // Перенаправление на страницу чата
+                    setTimeout(() => {
+                        window.location.href = 'chat.html';
+                    }, 1500);
+
+                } else {
+                    // Ошибка авторизации
+                    showError('loginPassword', data.detail || 'Ошибка авторизации');
+                }
+            } catch (error) {
+                console.error('Ошибка при авторизации:', error);
+                showError('loginPassword', 'Ошибка соединения с сервером');
+            } finally {
+                // Скрываем индикатор загрузки
+                loginBtn.disabled = false;
+                loginText.style.display = 'inline';
+                loginLoading.style.display = 'none';
+            }
+        }
+
+        // Обработка регистрации
+        async function handleRegister(event) {
+            event.preventDefault();
+
+            clearMessages();
+
+            const email = document.getElementById('registerEmail').value.trim();
+            const name = document.getElementById('registerName').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
+
+            // Валидация
+            let isValid = true;
+
+            if (!email) {
+                showError('registerEmail', 'Введите email');
+                isValid = false;
+            } else if (!validateEmail(email)) {
+                showError('registerEmail', 'Введите корректный email');
+                isValid = false;
+            }
+
+            if (!name) {
+                showError('registerName', 'Введите имя');
+                isValid = false;
+            } else if (name.length < 2) {
+                showError('registerName', 'Имя должно содержать минимум 2 символа');
+                isValid = false;
+            }
+
+            if (!password) {
+                showError('registerPassword', 'Введите пароль');
+                isValid = false;
+            } else if (!validatePassword(password)) {
+                showError('registerPassword', 'Пароль должен содержать минимум 6 символов');
+                isValid = false;
+            }
+
+            if (!passwordConfirm) {
+                showError('registerPasswordConfirm', 'Повторите пароль');
+                isValid = false;
+            } else if (password !== passwordConfirm) {
+                showError('registerPasswordConfirm', 'Пароли не совпадают');
+                isValid = false;
+            }
+
+            if (!isValid) return;
+
+            // Показываем индикатор загрузки
+            const registerBtn = document.getElementById('registerBtn');
+            const registerText = document.getElementById('registerText');
+            const registerLoading = document.getElementById('registerLoading');
+
+            registerBtn.disabled = true;
+            registerText.style.display = 'none';
+            registerLoading.style.display = 'inline-block';
+
+            try {
+                // Отправляем запрос на регистрацию
+                const response = await fetch(`${API_BASE_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        name: name,
+                        password: password,
+                        password_check: passwordConfirm
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Успешная регистрация
+                    showSuccess('Регистрация успешна! Теперь вы можете войти в систему.');
+
+                    // Очищаем форму
+                    registerForm.reset();
+
+                    // Переключаемся на вкладку авторизации
+                    setTimeout(() => {
+                        document.querySelector('.tab[data-tab="login"]').click();
+                    }, 2000);
+
+                } else {
+                    // Ошибка регистрации
+                    const errorMessage = data.detail || 'Ошибка регистрации';
+
+                    if (errorMessage.includes('Email')) {
+                        showError('registerEmail', errorMessage);
+                    } else {
+                        showError('registerEmail', errorMessage);
+                    }
+                }
+            } catch (error) {
+                console.error('Ошибка при регистрации:', error);
+                showError('registerEmail', 'Ошибка соединения с сервером');
+            } finally {
+                // Скрываем индикатор загрузки
+                registerBtn.disabled = false;
+                registerText.style.display = 'inline';
+                registerLoading.style.display = 'none';
+            }
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', () => {
+            // Проверяем подключение к API
+            checkApiConnection();
+
+            // Обработчики форм
+            loginForm.addEventListener('submit', handleLogin);
+            registerForm.addEventListener('submit', handleRegister);
+
+            // Автоматическая проверка паролей при вводе
+            const passwordConfirmInput = document.getElementById('registerPasswordConfirm');
+            if (passwordConfirmInput) {
+                passwordConfirmInput.addEventListener('input', () => {
+                    const password = document.getElementById('registerPassword').value;
+                    const passwordConfirm = passwordConfirmInput.value;
+
+                    if (password && passwordConfirm && password !== passwordConfirm) {
+                        showError('registerPasswordConfirm', 'Пароли не совпадают');
+                    } else {
+                        const errorElement = document.getElementById('registerPasswordConfirmError');
+                        errorElement.classList.remove('show');
+                        passwordConfirmInput.classList.remove('error');
+                    }
+                });
+            }
+
+            // Проверяем, есть ли сохраненный токен
+            const token = localStorage.getItem('auth_token');
+            if (token) {
+                // Можно добавить проверку токена и автоматический вход
+                console.log('Найден сохраненный токен');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Any
 
 from pydantic_settings import SettingsConfigDict, BaseSettings
@@ -30,7 +31,11 @@ class AuthSettings(BaseSettings):
         env_file=ENV_PATH, extra='ignore'
     )
 
+class PathSettings(BaseSettings):
+    BASE_DIR: Path = Path(__file__).resolve().parent
+    TEMPLATES: Path = BASE_DIR / "templates"
 
 AUTH_SETTINGS = AuthSettings().model_dump()
 DB_SETTINGS = DbSettings().model_dump()
+PATH_SETTINGS = PathSettings().model_dump()
 print()

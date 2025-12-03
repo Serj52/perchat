@@ -6,8 +6,11 @@ from fastapi.responses import RedirectResponse
 from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import Response
+
 from app.exceptions import TokenExpiredException, TokenNoFoundException
 from app.users.router import router as users_router
+
 
 # from app.chat.router import router as chat_router
 
@@ -29,9 +32,14 @@ app.include_router(users_router)
 # app.include_router(chat_router)
 
 
+
 @app.get("/")
 async def redirect_to_auth():
     return RedirectResponse(url="/auth")
+
+@app.get("/health")
+async def health():
+    return Response(status_code=200)
 
 
 @app.exception_handler(TokenNoFoundException)
