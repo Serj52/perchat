@@ -23,3 +23,9 @@ async def create_user(name: str, hashed_password: str, email: EmailStr,
         db_user = models.User(name=name, password=hashed_password, email=email)
         session.add(db_user)
         return db_user
+
+
+async def get_users(session: AsyncSession):
+    async with session.begin():
+        users = await session.execute(select(models.User))
+        return users.scalars().all()
